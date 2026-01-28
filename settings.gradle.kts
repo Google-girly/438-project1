@@ -21,3 +21,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "438_project1"
 include(":app")
+include(":auth-sample")
+include(":auth-lib")
+include(":app-remote-lib")
+include(":app-remote-sample")
