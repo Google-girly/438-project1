@@ -15,19 +15,25 @@
         android:paddingBottom="8dp"/>
 <!--    Start /Reset Button-->
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+
         <Button
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:id="@+id/btnStart"
             android:layout_weight="1"
-            android:text="@string/start"/>
+            android:text="@string/start" />
+
         <Button
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:id="@+id/btnReset"
             android:layout_marginStart="12dp"
             android:text="@string/reset"/>
 
@@ -70,16 +76,21 @@
         android:paddingBottom="12dp"/>
     <!--        Answer button-->
     <LinearLayout
+        style="?android:attr/buttonBarStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+
         <Button
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:id="@+id/btn1"
             android:text="1"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
+
         <Button
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:id="@+id/btn2"
