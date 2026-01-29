@@ -3,6 +3,7 @@ import com.squareup.moshi.Moshi
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 object Network {
@@ -20,7 +21,8 @@ object Network {
     val lyricsApi: LyricsOvhApi = Retrofit.Builder()
         .baseUrl("https://api.lyrics.ovh/v1/")
         .client(client)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        //.addConverterFactory(MoshiConverterFactory.create(moshi))
+        .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(LyricsOvhApi::class.java)
 }
