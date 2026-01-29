@@ -11,17 +11,36 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme._438_project1">
+
+        <!-- login page will be first page that launches -->
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme._438_project1">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- home page -->
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme._438_project1" />
+
+        <!-- gaming page -->
+        <activity
+            android:name=".GameActivity"
+            android:exported="false"
+            android:theme="@style/Theme._438_project1" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme._438_project1" />
+
     </application>
 
 </manifest>
