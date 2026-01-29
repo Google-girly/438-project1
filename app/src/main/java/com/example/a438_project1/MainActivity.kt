@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity(){
     private val correctSong = "XXX."
     private val correctArtists = "Kendrick Lamar"
-    private val choices = listOf("Lust.", "PRIDE." ,"FEAR","These Walls")
+    private val choices = listOf("XXX.", "PRIDE." ,"FEAR","These Walls")
 
     private val repo = LyricsRep(Network.lyricsApi)
 
@@ -31,9 +31,10 @@ class MainActivity : AppCompatActivity(){
 // Tell Android to use the XML layout file
         setContentView(R.layout.activity_main)
 
-        val tvLyrics = findViewById<TextView>(R.id.tvLyricsTitle)
+        val tvLyrics = findViewById<TextView>(R.id.tvLyrics)
+        requireNotNull(tvLyrics){"tvLyrics missing from activity_main.xml"}
         val tvResult = findViewById<TextView>(R.id.tvResult)
-        val tvReveal = findViewById<TextView>(R.id.Reveal)
+        val tvReveal = findViewById<TextView>(R.id.tvReveal)
 
         val btnStart = findViewById<Button>(R.id.btnStart)
         val btnReset = findViewById<Button>(R.id.btnReset)
