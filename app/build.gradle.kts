@@ -53,6 +53,15 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.squareup.moshi:moshi:1.15.1")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    // Retrofit (HTTP client)
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    // Convert JSON -> Kotlin data classes
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    //hopefully it fixes
+    implementation("androidx.appcompat:appcompat:1.7.1")
+
+    // Coroutines (for suspend/network calls)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation(libs.androidx.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
