@@ -19,9 +19,9 @@ import com.example.a438_project1.ui.theme._438_project1Theme
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(){
-    private val correctSong = "XXX."
+    private val correctSong = "These Walls."
     private val correctArtists = "Kendrick Lamar"
-    private val choices = listOf("XXX.", "PRIDE." ,"FEAR","These Walls")
+    private val choices = listOf("XXX.", "PRIDE." ,"FEAR.","These Walls")
 
     private val repo = LyricsRep(Network.lyricsApi)
 
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(){
                 try {
                     val lyrics = repo.fetchLyrics(correctSong, correctArtists)
                     //will only show 8 lines
-                    val shortened = lyrics.lines().take(8).joinToString("\n")
+                    val shortened = lyrics.lines().take(15).joinToString("\n")
                     tvLyrics.text = shortened
                 } catch (e: Exception){
                     tvLyrics.text = "Error loading lyrics: ${e.message}"
