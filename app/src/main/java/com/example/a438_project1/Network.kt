@@ -5,6 +5,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.create
 
 object Network {
     private val moshi = Moshi.Builder().build()
@@ -25,4 +26,10 @@ object Network {
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(LyricsOvhApi::class.java)
+    //iTunes search
+    val itunesApi: ItunesApi = Retrofit.Builder()
+        .baseUrl("https://itunes.apple.com/")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(ItunesApi::class.java)
 }
