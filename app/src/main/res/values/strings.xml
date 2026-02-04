@@ -5,4 +5,5 @@
     <string name="reset">Reset</string>
     <string name="lyrics">Lyrics</string>
     <string name="tap_start_to_load_lyrics">Tap Start to load Lyrics..</string>
+    <string name="enter_artist_ex_bashfortheworld">Enter artist(ex: BashfortheWorld)</string>
 </resources>
