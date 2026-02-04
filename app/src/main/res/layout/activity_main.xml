@@ -19,6 +19,7 @@
         android:id="@+id/etArtist"
         android:hint="@string/enter_artist_ex_bashfortheworld"
         android:inputType="textPersonName"
+        android:importantForAutofill="no"
         android:padding="12dp"/>
 <!--    Start /Reset Button-->
     <LinearLayout
