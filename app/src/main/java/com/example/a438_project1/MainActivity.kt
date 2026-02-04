@@ -58,23 +58,7 @@ class MainActivity : AppCompatActivity(){
             answerButton.forEach{it.isEnabled = enabled}
         }
 
-        /*
-        btnStart.setOnClickListener {
-            clearResult()
-            tvLyrics.text= "Loading Lyrics..."
-            lifecycleScope.launch {
-                try {
-                    val lyrics = repo.fetchLyrics(correctSong, correctArtists)
-                    //will only show 8 lines
-                    val shortened = lyrics.lines().take(15).joinToString("\n")
-                    tvLyrics.text = shortened
-                } catch (e: Exception){
-                    tvLyrics.text = "Error loading lyrics: ${e.message}"
-                }
-            }
-        }
 
-         */
         //reset section
         btnReset.setOnClickListener {
             clearResult()
