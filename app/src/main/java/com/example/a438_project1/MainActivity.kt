@@ -40,13 +40,6 @@ class MainActivity : AppCompatActivity(){
         val btn4 = findViewById<Button>(R.id.btn4)
         val answerButton = listOf(btn1, btn2, btn3,btn4)
 
-        /*setButton label
-        btn1.text = choices[0]
-        btn2.text = choices[1]
-        btn3.text = choices[2]
-        btn4.text = choices[3]
-         */
-
 
         fun clearResult(){
             tvResult.text = ""
@@ -60,7 +53,7 @@ class MainActivity : AppCompatActivity(){
 
 
         //reset section
-        btnReset.setOnClickListener {
+        btnStart.setOnClickListener {
             clearResult()
 
             val artistQuery = etArtists.text.toString().trim()
@@ -71,9 +64,14 @@ class MainActivity : AppCompatActivity(){
             tvLyrics.text = "Loading songs + Lyrics.."
             setButtonEnabled(false)
 
+            Log.d("QUIZ", "Start clicked. artistQuery =$artistQuery ")
+
+
             lifecycleScope.launch {
                 try{
+                    Log.d("QUIZ", "Calling iTunes.. ")
                     val option = itunesRepo.getFourSongs(artistQuery)
+                    Log.d("QUIZ", "iTunes returned ${option.size} tracks")
 
                     val correct = option.random()
                     correctSong = correct.trackName
@@ -82,12 +80,15 @@ class MainActivity : AppCompatActivity(){
                     answerButton.zip(option).forEach { (btn, track)->
                         btn.text = track.trackName ?: "?"
                     }
+
                     val lyrics = repo.fetchLyrics(
                         correctSong!!,
                         correctArtists!!
                     )
                     tvLyrics.text = lyrics.lines().take(8).joinToString("\n")
+
                 }catch (e: Exception){
+                    Log.d("QUIZ", "Failed loading songs/lyrics", e)
                     tvLyrics.text = "Error: ${e.message}"
                 }finally {
                     setButtonEnabled(true)
@@ -95,8 +96,9 @@ class MainActivity : AppCompatActivity(){
 
             }
         }
-        btnReset.setOnClickListener { clearResult()
-        tvLyrics.text = "Tap start to load lyrics"
+        btnReset.setOnClickListener {
+            clearResult()
+            tvLyrics.text = "Tap start to load lyrics"
         }
         fun choose(answer: String){
             val correct = answer.equals(correctSong ?: "", ignoreCase = true)
