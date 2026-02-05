@@ -6,6 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.create
+import java.util.concurrent.TimeUnit
 
 object Network {
     private val moshi = Moshi.Builder().build()
@@ -15,6 +16,8 @@ object Network {
     }
     private val client = OkHttpClient.Builder()
         .addInterceptor(logging)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
         .build()
     /**
      * Our lyrics API
@@ -29,6 +32,7 @@ object Network {
     //iTunes search
     val itunesApi: ItunesApi = Retrofit.Builder()
         .baseUrl("https://itunes.apple.com/")
+        .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
         .create(ItunesApi::class.java)
