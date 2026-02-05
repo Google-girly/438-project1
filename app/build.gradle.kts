@@ -3,19 +3,17 @@ import org.gradle.kotlin.dsl.implementation
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.3.5"
+    alias(libs.plugins.ksp)
 }
 
 android {
     namespace = "com.example.a438_project1"
-    compileSdk {
-        version = release(35)
-    }
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.a438_project1"
-        minSdk = 35
-        targetSdk = 36
+        minSdk = 24
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -32,11 +30,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     buildFeatures {
         compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 }
 
@@ -49,32 +50,31 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    /* new implementation*/
+
+    // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.retrofit2:converter-moshi:2.11.0")
+
+    // OkHttp
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    // JSON parsing
     implementation("com.squareup.moshi:moshi:1.15.1")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    // Retrofit (HTTP client)
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    // Convert JSON -> Kotlin data classes
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-    //hopefully it fixes
-    implementation("androidx.appcompat:appcompat:1.7.1")
-
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.google.code.gson:gson:2.10.1")
-//spotify dependencies
 
-    // Coroutines (for suspend/network calls)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation(libs.androidx.ui)
+    // AppCompat
     implementation(libs.androidx.appcompat)
-    implementation("androidx.room:room-runtime:2.8.4")
-    implementation("androidx.room:room-ktx:2.8.4")
-    ksp("androidx.room:room-compiler:2.8.4")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
