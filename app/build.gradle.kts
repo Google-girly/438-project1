@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -50,7 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-
+    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
