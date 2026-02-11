@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">438_project1</string>
+    <string name="are_you_a_fan">Are you a fan?</string>
+    <string name="start">Start</string>
+    <string name="reset">Reset</string>
+    <string name="lyrics">Lyrics</string>
+    <string name="tap_start_to_load_lyrics">Tap Start to load Lyrics..</string>
+    <string name="enter_artist_ex_bashfortheworld">Enter artist(ex: BashfortheWorld)</string>
 </resources>

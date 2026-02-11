@@ -7,7 +7,7 @@ import androidx.compose.material3.Surface
 import com.example.a438_project1.ui.HomeScreen
 import com.example.a438_project1.ui.theme._438_project1Theme
 
-class TestSpotify : ComponentActivity() {
+class HomeActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,19 +19,5 @@ class TestSpotify : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        // We will start writing our code here.
-    }
-
-    private fun connected() {
-        // Then we will write some more code here.
-    }
-
-    override fun onStop() {
-        super.onStop()
-        // Aaand we will finish off here.
     }
 }
