@@ -1,11 +1,23 @@
 package com.example.a438_project1
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material3.Surface
+import com.example.a438_project1.ui.GameScreen
+import com.example.a438_project1.ui.theme._438_project1Theme
 
-class GameActivity : AppCompatActivity() {
+class GameActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_game)
+
+        setContent {
+            _438_project1Theme {
+                Surface {
+                    GameScreen()
+                }
+            }
+        }
     }
 }
