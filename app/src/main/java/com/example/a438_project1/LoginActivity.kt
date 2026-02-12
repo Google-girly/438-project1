@@ -33,7 +33,7 @@ class LoginActivity : ComponentActivity() {
                                 val user = userDao.getUser(login, password)
                                 withContext(Dispatchers.Main) {
                                     if (user != null) {
-                                        startActivity(Intent(this@LoginActivity, GameActivity::class.java))
+                                        startActivity(Intent(this@LoginActivity, HomeActivity::class.java))
                                         finish()
                                     } else {
                                         Toast.makeText(this@LoginActivity, "Invalid login or password", Toast.LENGTH_SHORT).show()
