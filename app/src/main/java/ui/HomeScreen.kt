@@ -92,7 +92,7 @@ fun HomeScreen(
         Spacer(Modifier.height(288.dp))
 
         Text(
-            text = "OR",
+            text = "──────── OR ────────",
             modifier = Modifier.fillMaxWidth(),
             fontWeight = FontWeight.SemiBold,
             fontSize = 16.sp,
