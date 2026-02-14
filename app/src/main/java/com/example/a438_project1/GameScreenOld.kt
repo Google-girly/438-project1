@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun GameScreen(
+fun GameScreenOld(
     artistName: String,
     progressText: String,
     lyricsText: String,
