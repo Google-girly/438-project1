@@ -17,7 +17,8 @@ data class GameUiState(
     val isCorrect: Boolean? = null,
     val score: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isGameOver: Boolean = false
 )
 
 class GameViewModel(
@@ -41,13 +42,35 @@ class GameViewModel(
 
         _uiState.value = GameUiState(
             isLoading = true,
-            progressText = "Question 1 / $totalQuestions"
+            progressText = "Question 1 / $totalQuestions",
+            isGameOver = false
         )
 
         loadQuestion(next = false)
     }
 
-    fun loadQuestion(next: Boolean = false) {
+    fun restartGame() {
+        val artist = chosenArtist
+        if (!artist.isNullOrBlank()) startGame(artist)
+    }
+
+    /**
+     *
+     * It will go to results screen after question 10.
+     */
+    fun onNextPressed() {
+        if (questionNum >= totalQuestions) {
+            _uiState.value = _uiState.value.copy(
+                isGameOver = true,
+                isLoading = false,
+                error = null
+            )
+            return
+        }
+        loadQuestion(next = true)
+    }
+
+    private fun loadQuestion(next: Boolean = false) {
         val artist = chosenArtist
         if (artist.isNullOrBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -57,7 +80,7 @@ class GameViewModel(
             return
         }
 
-        if (next) questionNum = (questionNum + 1).coerceAtMost(totalQuestions)
+        if (next) questionNum += 1
         answeredThisQuestion = false
 
         viewModelScope.launch {
@@ -66,7 +89,8 @@ class GameViewModel(
                 error = null,
                 selectedAnswerIndex = null,
                 isCorrect = null,
-                progressText = "Question $questionNum / $totalQuestions"
+                progressText = "Question $questionNum / $totalQuestions",
+                isGameOver = false
             )
 
             try {
@@ -93,7 +117,6 @@ class GameViewModel(
                     val shuffled = titles.shuffled()
                     chosenAnswers = shuffled
 
-                    // ✅ Try each of the 4 candidates, with cleanup variants, and NO crashing on 404
                     for (candidate in shuffled) {
                         val candidateLyrics = fetchLyricsWithVariants(songTitle = candidate, artist = artist)
                         if (candidateLyrics != null) {
@@ -105,9 +128,8 @@ class GameViewModel(
                 }
 
                 if (correctTitle == null || lyricsFull == null || chosenAnswers.isEmpty()) {
-                    // show a friendly message instead of HTTP 404
                     throw IllegalStateException(
-                        "Lyrics not available for this artist right now. Tap Next to try again."
+                        "Lyrics not available right now. Tap Next to try again."
                     )
                 }
 
@@ -137,12 +159,12 @@ class GameViewModel(
         val chosen = current.answers.getOrNull(index) ?: return
         val correct = current.trackName
 
-        val isCorrect = (chosen == correct)
-        val newScore = if (isCorrect) current.score + 1 else current.score
+        val correctBool = (chosen == correct)
+        val newScore = if (correctBool) current.score + 1 else current.score
 
         _uiState.value = current.copy(
             selectedAnswerIndex = index,
-            isCorrect = isCorrect,
+            isCorrect = correctBool,
             score = newScore
         )
     }
@@ -177,15 +199,14 @@ class GameViewModel(
         return variants.map { it.trim() }.filter { it.isNotBlank() }.distinct()
     }
 
-    // ✅ KEY FIX: catch exceptions (like HTTP 404) and just treat as "no lyrics"
+
     private suspend fun fetchLyricsWithVariants(songTitle: String, artist: String): String? {
         for (v in titleVariants(songTitle)) {
             val res: String = try {
                 lyricsRep.fetchLyrics(song = v, artist = artist)
             } catch (_: Exception) {
-                continue // <-- 404/etc: try next variant/song
+                continue
             }
-
             if (!looksLikeMissingLyrics(res)) return res
         }
         return null
@@ -195,7 +216,6 @@ class GameViewModel(
         if (text.isBlank()) return "No lyrics found."
 
         var cleaned = text.replace("\r\n", "\n").trim()
-
         cleaned = cleaned.replace(
             Regex("^paroles de la chanson.*?\\n", RegexOption.IGNORE_CASE),
             ""
@@ -204,7 +224,6 @@ class GameViewModel(
             Regex("^lyrics of.*?\\n", RegexOption.IGNORE_CASE),
             ""
         )
-
         cleaned = cleaned.replace(Regex("\\s+"), " ").trim()
 
         val end = min(cleaned.length, maxChars)
