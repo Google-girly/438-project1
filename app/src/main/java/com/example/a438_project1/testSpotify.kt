@@ -1,4 +1,4 @@
-package com.example.a438_project1
+/*package com.example.a438_project1
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -35,3 +35,4 @@ class TestSpotify : ComponentActivity() {
         // Aaand we will finish off here.
     }
 }
+*/

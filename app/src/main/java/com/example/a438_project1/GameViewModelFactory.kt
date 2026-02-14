@@ -1,4 +1,4 @@
-package com.example.a438_project1.ui.game
+package com.example.a438_project1
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

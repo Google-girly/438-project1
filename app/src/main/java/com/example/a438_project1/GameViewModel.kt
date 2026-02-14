@@ -1,12 +1,11 @@
-package com.example.a438_project1.ui.game
+package com.example.a438_project1
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.a438_project1.ItunesRepository
-import com.example.a438_project1.LyricsRep
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.min
 
 data class GameUiState(
     val artistName: String = "",
@@ -32,20 +31,33 @@ class GameViewModel(
     private var questionNum = 1
     private val totalQuestions = 10
 
-    // small artist pool to sample wrong answers from (you can expand)
-    private val artistPool = listOf(
-        "Taylor Swift", "Drake", "The Weeknd", "Adele",
-        "Bad Bunny", "Ed Sheeran", "Billie Eilish", "Bruno Mars",
-        "Kendrick Lamar", "Rihanna"
-    )
-
-    // internal guards
     private var answeredThisQuestion = false
 
-    fun loadQuestion(next: Boolean = false) {
-        if (next) questionNum = (questionNum + 1).coerceAtMost(totalQuestions)
+    // ✅ the chosen artist from Home
+    private var chosenArtist: String? = null
 
-        // reset per-question internal state
+    /** Call this ONCE from GameActivity after reading the Intent extra. */
+    fun startGame(artist: String) {
+        chosenArtist = artist
+        questionNum = 1
+        _uiState.value = GameUiState(
+            isLoading = true,
+            progressText = "Question 1 / $totalQuestions"
+        )
+        loadQuestion(next = false)
+    }
+
+    fun loadQuestion(next: Boolean = false) {
+        val artist = chosenArtist
+        if (artist.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                error = "No artist selected. Go back and pick an artist."
+            )
+            return
+        }
+
+        if (next) questionNum = (questionNum + 1).coerceAtMost(totalQuestions)
         answeredThisQuestion = false
 
         viewModelScope.launch {
@@ -58,29 +70,30 @@ class GameViewModel(
             )
 
             try {
-                // pick an artist (random from pool)
-                val chosenArtist = artistPool.random()
+                // ✅ get four song options for the SAME artist (your repo already does this)
+                val tracks = itunesRepository.getFourSongs(artist)
 
-                // use your repository to get four songs for that artist
-                val tracks = itunesRepository.getFourSongs(chosenArtist)
+                // build answers = 4 song titles
+                val answers = tracks.mapNotNull { it.trackName }.distinct()
+                if (answers.size < 4) throw IllegalStateException("Not enough unique songs for: $artist")
 
-                // choose one track as the correct one
-                val correctTrack = tracks.random()
-                val artistName = correctTrack.artistName ?: chosenArtist
-                val trackName = correctTrack.trackName ?: throw IllegalStateException("Missing track name")
+                // pick which of the 4 is correct
+                val correctTitle = answers.random()
 
-                // fetch lyrics (LyricsRep handles sanitizing)
-                val lyrics = lyricsRep.fetchLyrics(song = trackName, artist = artistName)
+                // fetch lyrics for the correct song
+                val lyricsFull = lyricsRep.fetchLyrics(song = correctTitle, artist = artist)
 
-                // build 3 wrong artists (from artistPool) + the correct artist
-                val wrongArtists = artistPool.filter { it != artistName }.shuffled().take(3)
-                val answers = (wrongArtists + artistName).shuffled()
+                // ✅ show only a snippet (keeps UI readable)
+                val lyricsSnippet = lyricsFull
+                    .replace("\r\n", "\n")
+                    .trim()
+                    .let { snippet(it, maxChars = 220) }
 
                 _uiState.value = _uiState.value.copy(
-                    artistName = artistName,
-                    trackName = trackName,
-                    lyricsText = lyrics,
-                    answers = answers,
+                    artistName = artist,
+                    trackName = correctTitle,
+                    lyricsText = lyricsSnippet,
+                    answers = answers.shuffled(),
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -98,7 +111,7 @@ class GameViewModel(
 
         val current = _uiState.value
         val chosen = current.answers.getOrNull(index) ?: return
-        val correct = current.artistName
+        val correct = current.trackName
 
         val isCorrect = (chosen == correct)
         val newScore = if (isCorrect) current.score + 1 else current.score
@@ -106,10 +119,15 @@ class GameViewModel(
         _uiState.value = current.copy(
             selectedAnswerIndex = index,
             isCorrect = isCorrect,
-            score = newScore,
-            // optionally use error field for messages only when something goes wrong:
-            error = null
+            score = newScore
         )
+    }
+
+    private fun snippet(text: String, maxChars: Int): String {
+        if (text.isBlank()) return "No lyrics found."
+        val cleaned = text.replace(Regex("\\s+"), " ").trim()
+        val end = min(cleaned.length, maxChars)
+        return if (cleaned.length <= maxChars) cleaned else cleaned.substring(0, end) + "…"
     }
 }
 

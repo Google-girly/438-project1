@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.Surface
-import com.example.a438_project1.ui.game.GameRoute
+import com.example.a438_project1.GameRoute
 import com.example.a438_project1.ui.theme._438_project1Theme
 
 class GameActivity : ComponentActivity() {

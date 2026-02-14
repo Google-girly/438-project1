@@ -1,4 +1,4 @@
-package com.example.a438_project1.ui.game
+package com.example.a438_project1
 
 import com.example.a438_project1.ItunesApi
 import com.example.a438_project1.ItunesRepository
