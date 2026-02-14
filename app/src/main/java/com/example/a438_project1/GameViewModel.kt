@@ -32,18 +32,18 @@ class GameViewModel(
     private val totalQuestions = 10
 
     private var answeredThisQuestion = false
-
-    // ✅ the chosen artist from Home
     private var chosenArtist: String? = null
 
-    /** Call this ONCE from GameActivity after reading the Intent extra. */
     fun startGame(artist: String) {
         chosenArtist = artist
         questionNum = 1
+        answeredThisQuestion = false
+
         _uiState.value = GameUiState(
             isLoading = true,
             progressText = "Question 1 / $totalQuestions"
         )
+
         loadQuestion(next = false)
     }
 
@@ -52,7 +52,7 @@ class GameViewModel(
         if (artist.isNullOrBlank()) {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
-                error = "No artist selected. Go back and pick an artist."
+                error = "No artist selected."
             )
             return
         }
@@ -70,30 +70,54 @@ class GameViewModel(
             )
 
             try {
-                // ✅ get four song options for the SAME artist (your repo already does this)
-                val tracks = itunesRepository.getFourSongs(artist)
+                var correctTitle: String? = null
+                var lyricsFull: String? = null
+                var chosenAnswers: List<String> = emptyList()
 
-                // build answers = 4 song titles
-                val answers = tracks.mapNotNull { it.trackName }.distinct()
-                if (answers.size < 4) throw IllegalStateException("Not enough unique songs for: $artist")
+                var attempts = 0
+                val maxAttempts = 25
 
-                // pick which of the 4 is correct
-                val correctTitle = answers.random()
+                while (correctTitle == null && attempts < maxAttempts) {
+                    attempts++
 
-                // fetch lyrics for the correct song
-                val lyricsFull = lyricsRep.fetchLyrics(song = correctTitle, artist = artist)
+                    val tracks = itunesRepository.getFourSongs(artist)
 
-                // ✅ show only a snippet (keeps UI readable)
-                val lyricsSnippet = lyricsFull
-                    .replace("\r\n", "\n")
-                    .trim()
-                    .let { snippet(it, maxChars = 220) }
+                    val titles = tracks
+                        .mapNotNull { it.trackName }
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                        .distinct()
+
+                    if (titles.size < 4) continue
+
+                    val shuffled = titles.shuffled()
+                    chosenAnswers = shuffled
+
+                    // ✅ Try each of the 4 candidates, with cleanup variants, and NO crashing on 404
+                    for (candidate in shuffled) {
+                        val candidateLyrics = fetchLyricsWithVariants(songTitle = candidate, artist = artist)
+                        if (candidateLyrics != null) {
+                            correctTitle = candidate
+                            lyricsFull = candidateLyrics
+                            break
+                        }
+                    }
+                }
+
+                if (correctTitle == null || lyricsFull == null || chosenAnswers.isEmpty()) {
+                    // show a friendly message instead of HTTP 404
+                    throw IllegalStateException(
+                        "Lyrics not available for this artist right now. Tap Next to try again."
+                    )
+                }
+
+                val lyricsSnippet = snippet(lyricsFull!!, maxChars = 220)
 
                 _uiState.value = _uiState.value.copy(
                     artistName = artist,
-                    trackName = correctTitle,
+                    trackName = correctTitle!!,
                     lyricsText = lyricsSnippet,
-                    answers = answers.shuffled(),
+                    answers = chosenAnswers,
                     isLoading = false
                 )
             } catch (e: Exception) {
@@ -123,9 +147,66 @@ class GameViewModel(
         )
     }
 
+    private fun looksLikeMissingLyrics(text: String): Boolean {
+        val t = text.trim().lowercase()
+        return t.isBlank() ||
+                t.contains("404") ||
+                t.contains("not found") ||
+                t.contains("no lyrics") ||
+                t.contains("error") ||
+                t.startsWith("{") ||
+                t.startsWith("no lyrics found")
+    }
+
+    private fun titleVariants(title: String): List<String> {
+        val t = title.trim()
+        val variants = mutableListOf<String>()
+
+        variants += t
+        variants += t.replace(Regex("\\s*[\\(\\[].*?[\\)\\]]\\s*"), " ").trim()
+        variants += t.split(" - ", " – ", " — ", ": ").firstOrNull()?.trim().orEmpty()
+        variants += t.replace(Regex("(?i)\\s*(feat\\.|ft\\.)\\s+.*$"), "").trim()
+        variants += t.replace(
+            Regex("(?i)\\s*(remaster(ed)?|live|radio edit|clean|explicit|remix|version)\\s*$"),
+            ""
+        ).trim()
+        variants += t.replace(Regex("[^A-Za-z0-9\\s]"), " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+
+        return variants.map { it.trim() }.filter { it.isNotBlank() }.distinct()
+    }
+
+    // ✅ KEY FIX: catch exceptions (like HTTP 404) and just treat as "no lyrics"
+    private suspend fun fetchLyricsWithVariants(songTitle: String, artist: String): String? {
+        for (v in titleVariants(songTitle)) {
+            val res: String = try {
+                lyricsRep.fetchLyrics(song = v, artist = artist)
+            } catch (_: Exception) {
+                continue // <-- 404/etc: try next variant/song
+            }
+
+            if (!looksLikeMissingLyrics(res)) return res
+        }
+        return null
+    }
+
     private fun snippet(text: String, maxChars: Int): String {
         if (text.isBlank()) return "No lyrics found."
-        val cleaned = text.replace(Regex("\\s+"), " ").trim()
+
+        var cleaned = text.replace("\r\n", "\n").trim()
+
+        cleaned = cleaned.replace(
+            Regex("^paroles de la chanson.*?\\n", RegexOption.IGNORE_CASE),
+            ""
+        )
+        cleaned = cleaned.replace(
+            Regex("^lyrics of.*?\\n", RegexOption.IGNORE_CASE),
+            ""
+        )
+
+        cleaned = cleaned.replace(Regex("\\s+"), " ").trim()
+
         val end = min(cleaned.length, maxChars)
         return if (cleaned.length <= maxChars) cleaned else cleaned.substring(0, end) + "…"
     }
