@@ -12,4 +12,10 @@ interface UserDao {
 
     @Query("SELECT * FROM users ORDER BY name ASC")
     fun getAllUsers(): Flow<List<User>>
+
+    @Query("SELECT * FROM users WHERE (username = :username OR name = :username) AND password = :password")
+    suspend fun getUser(username: String, password: String): User?
+
+    @Query("SELECT * FROM users WHERE username = :username")
+    suspend fun getUserByUsername(username: String): User?
 }
