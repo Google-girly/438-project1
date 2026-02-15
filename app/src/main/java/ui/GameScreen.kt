@@ -1,106 +1,87 @@
 package com.example.a438_project1.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun GameScreen(
     artistName: String = "Artist Name",
     progressText: String = "Question 1 / 10",
-    lyrics: String = "Lyrics will go here probably",
+    lyrics: String = "Lyrics will go here",
     answers: List<String> = listOf("Answer A", "Answer B", "Answer C", "Answer D"),
+
+
+    selectedAnswerIndex: Int? = null,
+    isCorrect: Boolean? = null,
+    score: Int = 0,
+
     onQuit: () -> Unit = {},
     onAnswerClick: (index: Int) -> Unit = {},
     onNext: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val scroll = rememberScrollState()
+    val answered = selectedAnswerIndex != null
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Top section (artist + quit)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = artistName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            Spacer(Modifier.weight(1f))
-            OutlinedButton(
-                onClick = onQuit,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Quit")
-            }
+        // Top row: progress + score + quit
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(progressText, style = MaterialTheme.typography.titleMedium)
+            Text("Score: $score", style = MaterialTheme.typography.titleMedium)
         }
 
-        // Middle content (progress + lyrics)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopStart)
-                .padding(top = 56.dp) // pushes content below the header row
-                .verticalScroll(scroll)
-        ) {
-            Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
-            // "editbox background" vibe: use an outlined style + padding
-            OutlinedButton(
-                onClick = { /* no-op */ },
-                enabled = false,
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                Text(text = progressText, fontSize = 16.sp)
-            }
+        Text("Artist: $artistName", style = MaterialTheme.typography.titleLarge)
 
-            Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
+        // Lyrics card
+        Card(Modifier.fillMaxWidth()) {
             Text(
                 text = lyrics,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyLarge
             )
-
-            // leave space so bottom buttons don't overlap lyrics when scrolling
-            Spacer(Modifier.height(220.dp))
         }
 
-        // Bottom answers
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            answers.take(4).forEachIndexed { index, label ->
-                Button(
-                    onClick = { onAnswerClick(index) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(label)
-                }
+        Spacer(Modifier.height(16.dp))
+
+
+        answers.forEachIndexed { index, answer ->
+            val isSelected = selectedAnswerIndex == index
+
+            Button(
+                onClick = { onAnswerClick(index) },
+                enabled = !answered,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSelected) MaterialTheme.colorScheme.secondaryContainer
+                    else MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(answer)
             }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+
+        if (answered) {
+            Text(
+                text = if (isCorrect == true) "Correct!" else "Wrong!",
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            Spacer(Modifier.height(10.dp))
 
             Button(
                 onClick = onNext,
@@ -108,6 +89,15 @@ fun GameScreen(
             ) {
                 Text("Next")
             }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onQuit,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Quit")
         }
     }
 }

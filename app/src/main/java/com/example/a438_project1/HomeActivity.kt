@@ -1,11 +1,10 @@
 package com.example.a438_project1
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Surface
 import com.example.a438_project1.ui.HomeScreen
-import com.example.a438_project1.ui.theme._438_project1Theme
 
 class HomeActivity : ComponentActivity() {
 
@@ -13,11 +12,14 @@ class HomeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            _438_project1Theme {
-                Surface {
-                    HomeScreen()
+            HomeScreen(
+                itunesApi = ApiProvider.itunesApi,
+                onStartGame = { artistName ->
+                    val intent = Intent(this, GameActivity::class.java)
+                    intent.putExtra("artistName", artistName)
+                    startActivity(intent)
                 }
-            }
+            )
         }
     }
 }
