@@ -47,11 +47,6 @@ android {
     // DO NOT manually set compose compiler with Kotlin 2.x
     // Removed composeOptions block intentionally
 
-    kotlin {
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
-        }
-    }
 }
 
 dependencies {
