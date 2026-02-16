@@ -2,22 +2,22 @@ package com.example.a438_project1.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 @Composable
 fun LoginScreen(
@@ -30,114 +30,145 @@ fun LoginScreen(
     var email by rememberSaveable { mutableStateOf("") }
     var username by rememberSaveable { mutableStateOf("") }
     var createMode by rememberSaveable { mutableStateOf(false) }
+    var showPassword by rememberSaveable { mutableStateOf(false) }
+
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
+
+    val canSubmit = if (createMode) {
+        email.trim().isNotBlank() && username.trim().isNotBlank() && password.isNotBlank()
+    } else {
+        login.trim().isNotBlank() && password.isNotBlank()
+    }
+
+    fun submit() {
+        focusManager.clearFocus()
+        if (!canSubmit) return
+
+        if (createMode) {
+            onCreateClick(email.trim(), username.trim(), password)
+        } else {
+            onLoginClick(login.trim(), password)
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .imePadding()
-            .padding(16.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header (matches: textSize 28sp, bold, centered, marginTop 32dp)
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(28.dp))
+
         Text(
             text = if (createMode) "Create Account" else "Are You a Fan?",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold)
         )
 
-        // Login input (matches: marginTop 48dp, full width)
-        Spacer(Modifier.height(48.dp))
-        if (createMode) {
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
-            )
-            Spacer(Modifier.height(16.dp))
-            OutlinedTextField(
-                value = username,
-                onValueChange = { username = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Username") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Next
-                )
-            )
-        } else {
-            OutlinedTextField(
-                value = login,
-                onValueChange = { login = it },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Email or username") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
-            )
-        }
+        Spacer(Modifier.height(6.dp))
 
-        // Password input (matches: marginTop 16dp, full width)
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text("Password") },
-            singleLine = true,
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
-            )
+        Text(
+            text = if (createMode) "Make an account to start playing" else "Log in to start the quiz",
+            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
         )
 
-        // Login button (matches: marginTop 32dp, centered)
-        Spacer(Modifier.height(32.dp))
-        if (createMode) {
-            Button(
-                onClick = {
-                    focusManager.clearFocus()
-                    onCreateClick(email.trim(), username.trim(), password)
+        Spacer(Modifier.height(24.dp))
+
+
+            Column(Modifier.padding(16.dp)) {
+
+                if (createMode) {
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Email") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = username,
+                        onValueChange = { username = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Username") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+                } else {
+                    OutlinedTextField(
+                        value = login,
+                        onValueChange = { login = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Email or username") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Email,
+                            imeAction = ImeAction.Next
+                        )
+                    )
+
+                    Spacer(Modifier.height(12.dp))
                 }
-            ) {
-                Text("Create Account")
-            }
-            Spacer(Modifier.height(16.dp))
-            Button(
-                onClick = { createMode = false }
-            ) {
-                Text("Back to Login")
-            }
-        } else {
-            Row {
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Password") },
+                    singleLine = true,
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        TextButton(onClick = { showPassword = !showPassword }) {
+                            Text(if (showPassword) "Hide" else "Show")
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { submit() }
+                    )
+                )
+
+                Spacer(Modifier.height(16.dp))
+
                 Button(
-                    onClick = {
-                        focusManager.clearFocus()
-                        onLoginClick(login.trim(), password)
-                    }
+                    onClick = { submit() },
+                    enabled = canSubmit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(18.dp)
                 ) {
-                    Text("Login")
+                    Text(
+                        text = if (createMode) "Create Account" else "Login",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                    )
                 }
-                Spacer(Modifier.width(16.dp))
-                Button(
-                    onClick = { createMode = true }
+
+                Spacer(Modifier.height(8.dp))
+
+                TextButton(
+                    onClick = { createMode = !createMode },
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Text("Create Account")
+                    Text(if (createMode) "Back to Login" else "Create an Account")
                 }
             }
-        }
+
     }
 }
