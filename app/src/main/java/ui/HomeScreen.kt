@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.text.font.FontWeight
 import com.example.a438_project1.ItunesApi
 import kotlin.math.roundToInt
 
@@ -37,15 +38,15 @@ fun HomeScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var reloadKey by remember { mutableIntStateOf(0) }
 
-    // ✅ custom dropdown state
+    // dropdown state
     var showDropdown by remember { mutableStateOf(false) }
     var fieldRect by remember { mutableStateOf<Rect?>(null) }
     val density = LocalDensity.current
 
-    // ✅ Limit genres here
+    // Limits genres
     val seeds = remember { listOf("pop", "hip hop", "rock") }
 
-    // Load artists
+    // Loading artists
     LaunchedEffect(reloadKey) {
         try {
             isLoading = true
@@ -78,13 +79,25 @@ fun HomeScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(text = headerText, style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = headerText,
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
+        )
+
         Spacer(Modifier.height(12.dp))
 
-        Text(text = dropdownLabel, style = MaterialTheme.typography.labelLarge)
+        Text(
+            text = dropdownLabel,
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        )
         Spacer(Modifier.height(8.dp))
 
-        // ✅ Clickable wrapper so taps ALWAYS open the dropdown
+        // clickable wrapper so click opens dropdown menu
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -122,7 +135,7 @@ fun HomeScreen(
             )
         }
 
-        // ✅ Custom anchored popup dropdown (scrollable + stable)
+        // custom anchored popup dropdown (scrollable and stable)
         if (showDropdown && fieldRect != null) {
             val rect = fieldRect!!
             val menuWidthDp = with(density) { rect.width.toDp() }
@@ -182,14 +195,32 @@ fun HomeScreen(
 
         Spacer(Modifier.height(24.dp))
 
+        //updated 'or' section
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Divider(modifier = Modifier.weight(1f))
-            Text("  OR  ")
-            Divider(modifier = Modifier.weight(1f))
+            Divider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp
+            )
+
+            Text(
+                text = "OR",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+
+            Divider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp
+            )
         }
+
+
 
         Spacer(Modifier.height(24.dp))
 
@@ -200,7 +231,10 @@ fun HomeScreen(
                 }
             },
             enabled = !isLoading && artists.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = MaterialTheme.shapes.large
         ) {
             Text("Randomly Generate Artist")
         }
@@ -210,9 +244,13 @@ fun HomeScreen(
         Button(
             onClick = { selectedArtist?.let(onStartGame) },
             enabled = selectedArtist != null,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = MaterialTheme.shapes.large
         ) {
             Text("Start Quiz")
         }
+
     }
 }
