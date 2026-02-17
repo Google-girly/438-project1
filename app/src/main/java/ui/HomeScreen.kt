@@ -1,127 +1,256 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.a438_project1.ui
 
+import android.util.Log
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.text.font.FontWeight
+import com.example.a438_project1.ItunesApi
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
     headerText: String = "Are You a Fan?",
     dropdownLabel: String = "Select artist to begin quiz",
-    //TODO: need to pass API results into this list
-    artistOptions: List<String> = emptyList(),
-    onArtistSelected: (artist: String) -> Unit = {},
-    onRandom: () -> Unit = {}
+    itunesApi: ItunesApi,
+    onStartGame: (String) -> Unit
 ) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    var selectedArtist by rememberSaveable { mutableStateOf("") }
+    var selectedArtist by remember { mutableStateOf<String?>(null) }
+
+    var artists by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var reloadKey by remember { mutableIntStateOf(0) }
+
+    // dropdown state
+    var showDropdown by remember { mutableStateOf(false) }
+    var fieldRect by remember { mutableStateOf<Rect?>(null) }
+    val density = LocalDensity.current
+
+    // Limits genres
+    val seeds = remember { listOf("pop", "hip hop", "rock") }
+
+    // Loading artists
+    LaunchedEffect(reloadKey) {
+        try {
+            isLoading = true
+            error = null
+
+            val set = linkedSetOf<String>()
+            for (seed in seeds) {
+                val res = itunesApi.searchSongs(term = seed)
+                res.results
+                    .mapNotNull { it.artistName }
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .forEach { set.add(it) }
+            }
+
+            artists = set.toList().sorted()
+            selectedArtist = null
+
+            Log.d("HomeScreen", "Loaded ${artists.size} artists")
+        } catch (e: Exception) {
+            Log.e("HomeScreen", "Artist load failed", e)
+            error = e.toString()
+        } finally {
+            isLoading = false
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        //Header options
         Text(
             text = headerText,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
+            style = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold
+            )
         )
 
-        // Dropdown for artist names (Exposed)
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            OutlinedTextField(
-                value = selectedArtist,
-                onValueChange = {}, // read-only; selection will come from menu
-                readOnly = true,
-                label = { Text(dropdownLabel) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
-                modifier = Modifier
-                    .menuAnchor()
-                    .fillMaxWidth()
-            )
+        Spacer(Modifier.height(12.dp))
 
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                if (artistOptions.isEmpty()) {
-                    DropdownMenuItem(
-                        text = { Text("Loading artists…", style = MaterialTheme.typography.bodyMedium) },
-                        onClick = { expanded = false },
-                        enabled = false
+        Text(
+            text = dropdownLabel,
+            style = MaterialTheme.typography.labelLarge.copy(
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        )
+        Spacer(Modifier.height(8.dp))
+
+        // clickable wrapper so click opens dropdown menu
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { coords ->
+                    val pos = coords.positionInWindow()
+                    val size = coords.size
+                    fieldRect = Rect(
+                        pos.x,
+                        pos.y,
+                        pos.x + size.width,
+                        pos.y + size.height
                     )
-                } else {
-                    artistOptions.forEach { artist ->
-                        DropdownMenuItem(
-                            text = { Text(artist) },
-                            onClick = {
-                                selectedArtist = artist
-                                expanded = false
-                                onArtistSelected(artist)
-                            }
-                        )
+                    fieldRect = Rect(pos.x, pos.y, pos.x + size.width, pos.y + size.height)
+                }
+                .clickable(enabled = !isLoading && artists.isNotEmpty()) {
+                    showDropdown = true
+                }
+        ) {
+            // Disabled field (so Box receives click), but styled like normal
+            OutlinedTextField(
+                value = selectedArtist ?: "",
+                onValueChange = {},
+                readOnly = true,
+                enabled = false,
+                placeholder = { Text("Tap to choose") },
+                trailingIcon = { Text("▾") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                    disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+        }
+
+        // custom anchored popup dropdown (scrollable and stable)
+        if (showDropdown && fieldRect != null) {
+            val rect = fieldRect!!
+            val menuWidthDp = with(density) { rect.width.toDp() }
+
+            Popup(
+                offset = IntOffset(
+                    x = rect.left.roundToInt(),
+                    y = rect.bottom.roundToInt()
+                ),
+                properties = PopupProperties(
+                    focusable = true,
+                    dismissOnBackPress = true,
+                    dismissOnClickOutside = true
+                ),
+                onDismissRequest = { showDropdown = false }
+            ) {
+                Surface(
+                    tonalElevation = 4.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.width(menuWidthDp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 320.dp)
+                    ) {
+                        items(artists) { artist ->
+                            ListItem(
+                                headlineContent = { Text(artist) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedArtist = artist
+                                        showDropdown = false
+                                    }
+                            )
+                        }
                     }
                 }
             }
         }
 
-        //'or' middle section
-        Spacer(Modifier.height(288.dp))
+        Spacer(Modifier.height(12.dp))
 
-        Text(
-            text = "──────── OR ────────",
+        if (isLoading) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(10.dp))
+                Text("Loading artists...")
+            }
+        }
+
+        if (error != null) {
+            Spacer(Modifier.height(10.dp))
+            Text("Error: $error")
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { reloadKey++ }) { Text("Retry") }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        //updated 'or' section
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Divider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp
+            )
 
-        Spacer(Modifier.height(288.dp))
+            Text(
+                text = "OR",
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                ),
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+
+            Divider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp
+            )
+        }
 
 
-        // Random button
-        // TODO: need to add API functionality in viewModel for random btn
+
+        Spacer(Modifier.height(24.dp))
+
         Button(
-            onClick = onRandom,
+            onClick = {
+                if (artists.isNotEmpty()) {
+                    selectedArtist = artists.random()
+                }
+            },
+            enabled = !isLoading && artists.isNotEmpty(),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
+                .height(52.dp),
+            shape = MaterialTheme.shapes.large
         ) {
             Text("Randomly Generate Artist")
         }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen(
-        //also needs to be replaced with actual dropdown
-        artistOptions = listOf("Taylor Swift", "Drake", "Bad Bunny", "The Weeknd", "Ed Sheeran"),
-        onArtistSelected = {},
-        onRandom = {}
-    )
+        Spacer(Modifier.height(12.dp))
+
+        Button(
+            onClick = { selectedArtist?.let(onStartGame) },
+            enabled = selectedArtist != null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = MaterialTheme.shapes.large
+        ) {
+            Text("Start Quiz")
+        }
+
+    }
 }

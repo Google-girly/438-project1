@@ -1,113 +1,161 @@
 package com.example.a438_project1.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun GameScreen(
     artistName: String = "Artist Name",
     progressText: String = "Question 1 / 10",
-    lyrics: String = "Lyrics will go here probably",
+    lyrics: String = "Lyrics will go here",
     answers: List<String> = listOf("Answer A", "Answer B", "Answer C", "Answer D"),
+    selectedAnswerIndex: Int? = null,
+    isCorrect: Boolean? = null,
+    score: Int = 0,
     onQuit: () -> Unit = {},
     onAnswerClick: (index: Int) -> Unit = {},
     onNext: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val scroll = rememberScrollState()
+    val answered = selectedAnswerIndex != null
+    val pillShape = RoundedCornerShape(18.dp)
+    val answerHeight = 54.dp
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Top section (artist + quit)
+        // Top row: progress + score
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(Modifier.weight(1f))
             Text(
-                text = artistName,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp)
+                text = progressText,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             )
-            Spacer(Modifier.weight(1f))
-            OutlinedButton(
-                onClick = onQuit,
-                modifier = Modifier.padding(top = 8.dp)
+
+            Surface(
+                shape = RoundedCornerShape(999.dp),
+                tonalElevation = 2.dp,
+                color = MaterialTheme.colorScheme.surfaceVariant
             ) {
-                Text("Quit")
+                Text(
+                    text = "Score: $score",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                )
             }
         }
 
-        // Middle content (progress + lyrics)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopStart)
-                .padding(top = 56.dp) // pushes content below the header row
-                .verticalScroll(scroll)
+        Spacer(Modifier.height(10.dp))
+
+        // artist name (w strong hierarchy)
+        Text(
+            text = artistName,
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+        )
+        Text(
+            text = "Select the correct song title",
+            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+        )
+
+        Spacer(Modifier.height(14.dp))
+
+        // lyrics card (cleaner + more readable)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
-            Spacer(Modifier.height(16.dp))
-
-            // "editbox background" vibe: use an outlined style + padding
-            OutlinedButton(
-                onClick = { /* no-op */ },
-                enabled = false,
-                contentPadding = PaddingValues(8.dp)
-            ) {
-                Text(text = progressText, fontSize = 16.sp)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
             Text(
                 text = lyrics,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier.padding(16.dp),
+                style = MaterialTheme.typography.bodyLarge.copy(lineHeight = MaterialTheme.typography.bodyLarge.lineHeight)
             )
-
-            // leave space so bottom buttons don't overlap lyrics when scrolling
-            Spacer(Modifier.height(220.dp))
         }
 
-        // Bottom answers
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            answers.take(4).forEachIndexed { index, label ->
-                Button(
-                    onClick = { onAnswerClick(index) },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(label)
+        Spacer(Modifier.height(16.dp))
+
+        // Answer buttons
+        answers.forEachIndexed { index, answer ->
+            val isSelected = selectedAnswerIndex == index
+
+            val containerColor =
+                when {
+                    !answered && isSelected -> MaterialTheme.colorScheme.secondaryContainer
+                    !answered -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.70f)
                 }
+
+            Button(
+                onClick = { onAnswerClick(index) },
+                enabled = !answered,
+                shape = pillShape,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(answerHeight)
+                    .padding(vertical = 6.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = containerColor)
+            ) {
+                Text(
+                    text = answer,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                )
             }
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // Feedback + Next
+        if (answered) {
+            val good = isCorrect == true
+            val resultColor = if (good) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.errorContainer
+            val resultTextColor = if (good) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onErrorContainer
+            val resultText = if (good) "Correct!" else "Not quite — try the next one"
+
+            Surface(
+                color = resultColor,
+                shape = RoundedCornerShape(999.dp),
+            ) {
+                Text(
+                    text = resultText,
+                    color = resultTextColor,
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             Button(
                 onClick = onNext,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+                shape = pillShape
             ) {
-                Text("Next")
+                Text("Next", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium))
             }
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onQuit,
+            modifier = Modifier.fillMaxWidth().height(50.dp),
+            shape = pillShape
+        ) {
+            Text("Quit", style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium))
         }
     }
 }
