@@ -94,4 +94,16 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // For Compose UI testing
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    //Coroutines test (for runTest in API testing)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+
+    // MockWebServer
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    // Retrofit + Gson (usually already in main deps, but safe for tests)
+    testImplementation("com.squareup.retrofit2:retrofit:2.11.0")
+    testImplementation("com.squareup.retrofit2:converter-gson:2.11.0")
 }
